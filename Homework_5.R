@@ -65,4 +65,25 @@ logitmfx(choice ~ detstock, data = detail_DF)
 # Our coefficient says one detailing visit or 1.25 lagged detailing visit increases 
 # the chance of a perscription by 2.4%
 
+########################################################
+################## Question 4 ##########################
+
+# ROI formula is Increase in Profit / Cost
+# (Increase in Revenue - Cost) / Cost
+# (Increase in Probility of Perscription Per Visit * Visits * Revenue per Perscription - Cost) / Cost
+# (Delta P * 15.7 * $100 - $60) / $60
+
+# Method 1: Marginal effect on prescription probability
+
+# Run mfx package
+mfx1 <- logitmfx(choice ~ detstock, data = detail_DF, atmean = FALSE)
+
+# Extract the marginal effects extimates from the mfx output
+P_mfx <- mfx1$mfxest[1]
+
+# Calculate ROI
+ROI_MFX <- (P_mfx * 15.7 * 100 - 60) / 60
+
+
+# Method 2: Exact effect on prescription probability
 
