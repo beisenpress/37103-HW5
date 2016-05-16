@@ -15,7 +15,7 @@ load("Detailing.RData")
 histogram(detail_DF$det, main = "Histogram of Detailing Visits in Last 30 Days")
 
 describeBy(detail_DF$det, group = detail_DF$type)
-# There is a lot more detailing for doctors that perscribe more
+# There is a lot more detailing for doctors that prescribe more
 
 ########################################################
 ################## Question 2 ##########################
@@ -24,7 +24,7 @@ summary(reg1)
 
 logitmfx(choice ~ det, data = detail_DF)
 
-# Each detailing visit increases the probability of a perscription by 3.4%
+# Each detailing visit increases the probability of a prescription by 3.4%
 
 ########################################################
 ################## Question 3 ##########################
@@ -63,14 +63,14 @@ summary(reg3)
 logitmfx(choice ~ detstock, data = detail_DF)
 
 # Our coefficient says one detailing visit or 1.25 lagged detailing visit increases 
-# the chance of a perscription by 2.4%
+# the chance of a prescription by 2.4%
 
 ########################################################
 ################## Question 4 ##########################
 
 # ROI formula is Increase in Profit / Cost
 # (Increase in Revenue - Cost) / Cost
-# (Increase in Probility of Perscription Per Visit * Visits * Revenue per Perscription - Cost) / Cost
+# (Increase in Probility of Prescription Per Visit * Visits * Revenue per Prescription - Cost) / Cost
 # (Delta P * 15.7 * $100 - $60) / $60
 
 # Method 1: Marginal effect on prescription probability
@@ -79,11 +79,70 @@ logitmfx(choice ~ detstock, data = detail_DF)
 mfx1 <- logitmfx(choice ~ detstock, data = detail_DF, atmean = FALSE)
 
 # Extract the marginal effects extimates from the mfx output
-P_mfx <- mfx1$mfxest[1]
+P_mfx1 <- mfx1$mfxest[1]
 
 # Calculate ROI
-ROI_MFX <- (P_mfx * 15.7 * 100 - 60) / 60
+ROI_MFX1 <- (P_mfx1 * 15.7 * 100 - 60) / 60
 
 
 # Method 2: Exact effect on prescription probability
 
+# Calculate the predicted probabiliy of writing a prescription for each observation
+Pr = predict(reg3, type = "response")
+
+# Create summary statistics and histogram for predicted probabilities
+describe(Pr)
+histogram(Pr, xlab = "Predicted Probability of Writing a Prescription", main = "Histogram of Predicted Probabilities")
+
+# Create a new data frame
+detail_new_DF = detail_DF
+
+# In the new data frame, increase detail stock by 1 for every observation
+detail_new_DF$detstock = detail_new_DF$detstock + 1
+
+# Calculate the predicted probabiliy of writing a prescription for each modified observation
+Pr_1 = predict(reg3, newdata = detail_new_DF, type = "response")
+
+# Calculate the average difference in predictions.  This yields the marginal probability for 1 more detailing
+P_pred1 <- mean(Pr_1 - Pr)
+
+# Calculate ROI
+ROI_Pred1 <- (P_pred1 * 15.7 * 100 - 60) / 60
+
+# ROI using the marginal effects method is negative.  Using the actual predictions it is positive.
+
+########################################################
+################## Question 5 ##########################
+
+# ROI formula is Increase in Profit / Cost
+# (Increase in Revenue - Cost) / Cost
+# (Increase in Probility of Prescription Per Visit * Visits * Revenue per Prescription - Cost) / Cost
+# (Delta P * 15.7 * $100 - $60) / $60
+
+# Method 1: Marginal effect on prescription probability
+
+# Calculate ROI.  The probability from the MFX output is simply multipled by the delta lag factor 
+ROI_MFX2 <- (P_mfx1 * (1+delta_min) * 15.7 * 100 - 60) / 60
+
+
+# Method 2: Exact effect on prescription probability
+
+# Calculate the predicted probabiliy of writing a prescription for each observation
+detail_new_DF = detail_DF
+
+# In the new data frame, increase detail stock by 1 for every observation
+detail_new_DF$detstock = detail_new_DF$detstock + delta_min
+
+# Calculate the predicted probabiliy of writing a prescription for each modified observation
+Pr_2 = predict(reg3, newdata = detail_new_DF, type = "response")
+
+# Calculate the average difference in predictions.  This yields the marginal probability for 1 more detailing
+P_pred2 <- mean(Pr_2 - Pr)
+
+# Calculate ROI
+ROI_Pred2 <- ( (P_pred1 + P_pred2) * 15.7 * 100 - 60) / 60
+
+# ROI under both methods is now positive
+
+########################################################
+################## Question 6 ##########################
