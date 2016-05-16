@@ -109,7 +109,7 @@ P_pred1 <- mean(Pr_1 - Pr)
 # Calculate ROI
 ROI_Pred1 <- (P_pred1 * 15.7 * 100 - 60) / 60
 
-# ROI using the marginal effects method is negative.  Using the actual predictions it is positive.
+# ROI using both methods is negative 
 
 ########################################################
 ################## Question 5 ##########################
@@ -146,3 +146,47 @@ ROI_Pred2 <- ( (P_pred1 + P_pred2) * 15.7 * 100 - 60) / 60
 
 ########################################################
 ################## Question 6 ##########################
+
+# Data frame containing marginal effects and (exact) predicted incremental prescription probabilities
+type_DF = data.frame(type = 1:3, delta_Pr_MFX = rep(0, times = 3), delta_Pr = rep(0, times = 3), delta_Pr_next = rep(0, times = 3))
+
+# Loop over all physician types
+for (k in 1:3) {
+  # Extract data for type k
+  detail_k_DF = subset(detail_DF, type == k)
+  
+  # Run the marginal effects package on teh 
+  mfx_k <- logitmfx(choice ~ detstock, data = detail_k_DF, atmean = FALSE)
+  # Extract the marginal effects extimates from the mfx output
+  type_DF[k, "delta_Pr_MFX"] = mfx_k$mfxest[1]
+  
+  # Run logistic regression on data for type k
+  fit_type_k = glm(choice ~ detstock, family = binomial(link = "logit"), data = detail_k_DF)
+  
+  # Exact effect on prescription probability from a one unit increase in detailing
+  # Duplicate the dataset
+  detail_k_new_DF = detail_k_DF
+  # Add 1 to the detail stock for each observation
+  detail_k_new_DF$detstock = detail_k_DF$detstock + 1
+  # Predict prescription probabilities for the original data
+  Pr = predict(fit_type_k, type = "response")
+  # Predict prescription probabilities for the data with stock increased by 1 
+  Pr_1 = predict(fit_type_k, newdata = detail_k_new_DF, type = "response")
+  # Mean exact effect on prescription probability
+  type_DF[k, "delta_Pr"] = mean(Pr_1 - Pr)
+  # Exact effect of a one unit increase in detailing on the prescription probability in the next period
+  # Set the stock in the new data frame to be the original stock plus delta
+  detail_k_new_DF$detstock = detail_k_DF$detstock + delta_min
+  # Predict prescription probabilities with a delta increase on detail stock
+  Pr_1_next = predict(fit_type_k, newdata = detail_k_new_DF, type = "response")
+  # Calcualte the mean increase in probability
+  type_DF[k, "delta_Pr_next"] = mean(Pr_1_next - Pr)
+}
+
+# Calculate ROI for the marginal effects estimate
+type_DF$ROI_MFX <- (type_DF$delta_Pr_MFX * (1+delta_min) * 15.7 * 100 - 60) / 60
+
+# Calculate ROI for the effects using the average prediction
+type_DF$ROI_Pred <- ( (type_DF$delta_Pr + type_DF$delta_Pr_next) * 15.7 * 100 - 60) / 60
+
+# ROI is very positive for type 1 and 2. ROI is negative for type 3.  Only type 1 and 2 doctors should recieve additional detailing.
