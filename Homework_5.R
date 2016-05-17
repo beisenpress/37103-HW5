@@ -15,7 +15,7 @@ load("Detailing.RData")
 ########################################################
 ################## Question 1 ##########################
 
-histogram(detail_DF$det, main = "Histogram of Detailing Visits in Last 30 Days")
+hist(detail_DF$det, main = "Histogram of Detailing Visits in Last 30 Days")
 
 describeBy(detail_DF$det, group = detail_DF$type)
 # There is a lot more detailing for doctors that prescribe more
@@ -151,7 +151,11 @@ ROI_Pred2 <- ( (P_pred1 + P_pred2) * 15.7 * 100 - 60) / 60
 ################## Question 6 ##########################
 
 # Data frame containing marginal effects and (exact) predicted incremental prescription probabilities
-type_DF = data.frame(type = 1:3, delta_Pr_MFX = rep(0, times = 3), delta_Pr = rep(0, times = 3), delta_Pr_next = rep(0, times = 3))
+type_DF = data.frame(type = 1:3,
+                     visits = c(1.9, 7.2, 30.2),
+                     delta_Pr_MFX = rep(0, times = 3), 
+                     delta_Pr = rep(0, times = 3), 
+                     delta_Pr_next = rep(0, times = 3))
 
 # Loop over all physician types
 for (k in 1:3) {
@@ -187,9 +191,9 @@ for (k in 1:3) {
 }
 
 # Calculate ROI for the marginal effects estimate
-type_DF$ROI_MFX <- (type_DF$delta_Pr_MFX * (1+delta_min) * 15.7 * 100 - 60) / 60
+type_DF$ROI_MFX <- (type_DF$delta_Pr_MFX * (1+delta_min) * type_DF$visits * 100 - 60) / 60
 
 # Calculate ROI for the effects using the average prediction
-type_DF$ROI_Pred <- ( (type_DF$delta_Pr + type_DF$delta_Pr_next) * 15.7 * 100 - 60) / 60
+type_DF$ROI_Pred <- ( (type_DF$delta_Pr + type_DF$delta_Pr_next) * type_DF$visits * 100 - 60) / 60
 
-# ROI is very positive for type 1 and 2. ROI is negative for type 3.  Only type 1 and 2 doctors should recieve additional detailing.
+# ROI is only positive for type 3.  Focus efforts on those doctors.
