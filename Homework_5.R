@@ -15,7 +15,11 @@ load("Detailing.RData")
 ########################################################
 ################## Question 1 ##########################
 
-hist(detail_DF$det, main = "Histogram of Detailing Visits in Last 30 Days")
+histogram(detail_DF$det, main = "Detailing Visits in Last 30 Days", type = "count")
+
+histogram(~factor(det)|factor(type), data = detail_DF, main = "Detailing Visits in Last 30 Days by Type", type = "count")
+
+table(detail_DF$det, detail_DF$type)
 
 describeBy(detail_DF$det, group = detail_DF$type)
 # There is a lot more detailing for doctors that prescribe more
@@ -25,7 +29,7 @@ describeBy(detail_DF$det, group = detail_DF$type)
 reg1 <- glm(choice ~ det, family = binomial(link = "logit"), data = detail_DF)
 summary(reg1)
 
-logitmfx(choice ~ det, data = detail_DF)
+logitmfx(choice ~ det, data = detail_DF, atmean = FALSE)
 
 # Each detailing visit increases the probability of a prescription by 3.4%
 
@@ -39,7 +43,7 @@ AICs <- numeric()
 # Loop through all delta values with regressions
 for (i in 1:5){
   # Calculate Delta
-  delta = 0.7 + 0.05*i
+  delta = 0.65 + 0.05*i
   # Use delta to calculate the detail stock variable
   detail_DF$detstock = detail_DF$det + delta*detail_DF$lag_det
   # Run regression using the detail stock
@@ -63,7 +67,7 @@ delta_min = AIC_DF$deltas[which.min(AIC_DF$AICs)]
 detail_DF$detstock = detail_DF$det + delta_min*detail_DF$lag_det
 reg3 <- glm(choice ~ detstock, family = binomial(link = "logit"), data = detail_DF)
 summary(reg3)
-logitmfx(choice ~ detstock, data = detail_DF)
+logitmfx(choice ~ detstock, data = detail_DF, atmean = FALSE)
 
 # Our coefficient says one detailing visit or 1.25 lagged detailing visit increases 
 # the chance of a prescription by 2.4%
