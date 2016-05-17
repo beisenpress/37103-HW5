@@ -1,12 +1,15 @@
 #### 37301 Data Driven Marketing ######
 #### Homework 5 #######
 
+# Load libraries
 library(psych)
 library(lattice)
 library(plyr)
 library(mfx)
 
+# Set working directory
 setwd("/Users/ben/Dropbox/Chicago Booth/37103 Data Driven Marketing/Homework 5/37103-HW5")
+# Load Data
 load("Detailing.RData")
 
 ########################################################
@@ -81,7 +84,7 @@ mfx1 <- logitmfx(choice ~ detstock, data = detail_DF, atmean = FALSE)
 # Extract the marginal effects extimates from the mfx output
 P_mfx1 <- mfx1$mfxest[1]
 
-# Calculate ROI
+# Calculate ROI using marginal effects method
 ROI_MFX1 <- (P_mfx1 * 15.7 * 100 - 60) / 60
 
 
@@ -106,7 +109,7 @@ Pr_1 = predict(reg3, newdata = detail_new_DF, type = "response")
 # Calculate the average difference in predictions.  This yields the marginal probability for 1 more detailing
 P_pred1 <- mean(Pr_1 - Pr)
 
-# Calculate ROI
+# Calculate ROI using prediction method
 ROI_Pred1 <- (P_pred1 * 15.7 * 100 - 60) / 60
 
 # ROI using both methods is negative 
